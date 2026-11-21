@@ -128,7 +128,14 @@ async function find() {
   go.disabled = true; go.innerHTML = 'دەدۆزرێتەوە<span class="spin"></span>';
   try {
     const r = await fetch('/api/info', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
-    const d = await r.json();
+    let d = null;
+    try { d = await r.json(); } catch {}
+    if (!d) {
+      msg.textContent = (r.status === 502 || r.status === 503 || r.status === 504)
+        ? 'سێرڤەر خەوتووە و خەریکە هەڵدەستێتەوە. ٣٠ چرکە چاوەڕێ بکە و دووبارە دۆزینەوە بکە.'
+        : 'سێرڤەری دابەزاندن کار ناکات (کۆدی ' + r.status + '). دڵنیابە سایتەکە لەسەر Render دانراوە، نەک GitHub Pages.';
+      return;
+    }
     if (!r.ok) {
       msg.textContent = d.error === 'unsupported'
         ? 'ئەم لینکە پشتگیری ناکرێت. تەنها تیکتۆک، ئینستاگرام، فەیسبووک، پینترێست و سناپچات.'
@@ -149,7 +156,7 @@ async function find() {
     result.classList.add('show');
     result.scrollIntoView({ behavior:'smooth', block:'nearest' });
   } catch {
-    msg.textContent = 'کێشەی پەیوەندی هەیە. دووبارە هەوڵ بدەرەوە.';
+    msg.textContent = 'پەیوەندی بە سێرڤەرەوە نییە. ئینتەرنێتەکەت بپشکنە، یان سایتەکە لە ڕێگای لینکی Render بکەرەوە.';
   } finally {
     go.disabled = false; go.textContent = 'دۆزینەوە';
   }
